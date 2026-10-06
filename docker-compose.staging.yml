@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    env_file: [.env.staging]
+    ports: ["3000:3000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_started}
+  postgres:
+    image: postgres:17-alpine
+    environment: {POSTGRES_USER: lume, POSTGRES_PASSWORD: lume, POSTGRES_DB: lume}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL","pg_isready -U lume -d lume"], interval: 5s, timeout: 5s, retries: 10}
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server","--appendonly","yes"]
+    volumes: [redisdata:/data]
+volumes: {pgdata: {}, redisdata: {}}

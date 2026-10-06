@@ -1,0 +1,150 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lume Admin</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#09090f;color:#f7f5fa;font:14px system-ui,Arial}.wrap{max-width:1200px;margin:auto;padding:22px 16px 60px}.top{display:flex;align-items:center;gap:10px}.logo{font-size:27px;font-weight:900;color:#e879f9}.spacer{flex:1}button,input,select{padding:10px;border-radius:10px;border:1px solid #303041;background:#0d0d15;color:#fff}button{cursor:pointer}.primary{background:#d946ef;border:0;font-weight:800}.card,.kpi{background:#13131d;border:1px solid #292938;border-radius:16px;padding:16px}.login{max-width:430px;margin:55px auto}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.kpi b{display:block;font-size:25px}.muted{color:#aaa5b7}.tabs{display:flex;gap:7px;margin:18px 0}.tabs button.active{background:#d946ef;border-color:#d946ef}.panel{display:none}.panel.active{display:block}
+.chart{display:flex;align-items:flex-end;gap:5px;height:180px;padding:12px 0;border-bottom:1px solid #292938}
+.barcol{flex:1;min-width:4px;position:relative;height:100%;display:flex;align-items:flex-end}
+.barcol i{display:block;width:100%;background:#d946ef;border-radius:4px 4px 0 0;min-height:2px}
+.barcol span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:#777}
+.metricgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.big{font-size:30px;font-weight:900}
+.rank{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #292938}
+select.full,input.full{width:100%}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{margin-bottom:10px}.field label{display:block;margin-bottom:6px;color:#cbc6d5}.full{width:100%}.post{display:grid;grid-template-columns:85px 1fr auto;gap:12px;align-items:center;border-bottom:1px solid #292938;padding:10px 0}.thumb{width:85px;height:68px;border-radius:8px;background:#20202b;overflow:hidden}.thumb img,.thumb video{width:100%;height:100%;object-fit:cover}.actions{display:flex;gap:6px;flex-wrap:wrap}.pill{padding:4px 7px;border-radius:99px;background:#ffffff14;font-size:11px}.modal{display:none;position:fixed;inset:0;background:#000d;align-items:center;justify-content:center;padding:15px}.modal.show{display:flex}.box{width:min(560px,100%);max-height:90vh;overflow:auto;background:#151520;border:1px solid #303041;border-radius:18px;padding:20px}.close{float:right;background:none;border:0;font-size:20px}.bar{height:8px;background:#272735;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:#d946ef}.table{width:100%;border-collapse:collapse}.table td,.table th{text-align:left;padding:9px;border-bottom:1px solid #292938}@media(max-width:800px){.metricgrid{grid-template-columns:1fr}.grid4{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr}.post{grid-template-columns:65px 1fr}.actions{grid-column:1/-1}}
+</style></head><body><main class="wrap">
+<div class="top"><div class="logo">Lume Admin</div><div class="spacer"></div><a href="/" style="color:#e879f9">Public</a><button id="logout">Keluar</button></div>
+<div id="login" class="card login"><h2>Admin Login</h2><div class="field"><label>Password</label><input id="pw" class="full" type="password"></div><div class="field"><label>Authenticator</label><input id="otp" class="full" inputmode="numeric" maxlength="6"></div><button class="primary full" onclick="login()">Masuk</button><p id="msg" class="muted"></p></div>
+<div id="app" style="display:none"><div class="grid4"><div class="kpi"><span class="muted">Kreator</span><b id="c">0</b></div><div class="kpi"><span class="muted">Konten</span><b id="p">0</b></div><div class="kpi"><span class="muted">Member</span><b id="m">0</b></div><div class="kpi"><span class="muted">Pendapatan</span><b id="r">Rp0</b></div></div>
+<div class="tabs"><button class="active" data-t="dashboard">Dashboard</button><button data-t="finance">Keuangan</button><button data-t="recon">Rekonsiliasi</button><button data-t="content">Konten</button><button data-t="creator">Kreator</button><button data-t="tx">Transaksi</button></div>
+
+<section id="dashboard" class="panel active"><div class="card">
+<div class="top"><div><h2>Business Dashboard</h2><div class="muted">Ringkasan performa Lume</div></div><div class="spacer"></div>
+<select id="range" onchange="loadAnalytics()"><option value="7">7 hari</option><option value="30" selected>30 hari</option><option value="90">90 hari</option><option value="365">365 hari</option></select>
+<button onclick="exportTx()">Export CSV</button></div>
+<div class="metricgrid" style="margin-top:15px">
+<div class="kpi"><span class="muted">Omzet total</span><div class="big" id="ar">Rp0</div></div>
+<div class="kpi"><span class="muted">Order berhasil</span><div class="big" id="ao">0</div></div>
+<div class="kpi"><span class="muted">Order pending</span><div class="big" id="ap">0</div></div>
+</div>
+<h3>Pendapatan harian</h3><div id="chart" class="chart"></div>
+<div class="row" style="margin-top:20px">
+<div class="card"><h3>Jenis penjualan</h3><div id="types"></div></div>
+<div class="card"><h3>Member</h3><div id="members"></div></div>
+</div>
+<div class="row" style="margin-top:20px">
+<div class="card"><h3>Premium terlaris</h3><div id="topPosts"></div></div>
+<div class="card"><h3>Performa kreator</h3><div id="creatorRank"></div></div>
+</div>
+</div></section>
+
+<section id="finance" class="panel"><div class="card">
+<div class="top"><div><h2>Keuangan</h2><div class="muted">Komisi kreator dan saldo payout</div></div><div class="spacer"></div></div>
+<div class="metricgrid" style="margin-top:15px">
+<div class="kpi"><span class="muted">Gross</span><div class="big" id="fgross">Rp0</div></div>
+<div class="kpi"><span class="muted">Bagian Kreator</span><div class="big" id="fcreator">Rp0</div></div>
+<div class="kpi"><span class="muted">Pendapatan Lume</span><div class="big" id="fplatform">Rp0</div></div>
+<div class="kpi"><span class="muted">Sudah Dibayar</span><div class="big" id="fpayout">Rp0</div></div>
+<div class="kpi"><span class="muted">Saldo Kreator</span><div class="big" id="fbalance">Rp0</div></div>
+</div>
+<h3 style="margin-top:24px">Kreator & Komisi</h3><div id="financeCreators"></div>
+<h3 style="margin-top:24px">Riwayat Payout</h3><div id="payouts"></div>
+</div></section>
+
+<section id="recon" class="panel"><div class="card">
+<div class="top"><div><h2>Rekonsiliasi</h2><div class="muted">Refund, membership expired, dan pemeriksaan angka</div></div><div class="spacer"></div><button class="primary" onclick="runRecon()">Jalankan Rekonsiliasi</button></div>
+<div class="metricgrid" style="margin-top:15px">
+<div class="kpi"><span class="muted">Member aktif</span><div class="big" id="rmactive">0</div></div>
+<div class="kpi"><span class="muted">Member expired</span><div class="big" id="rmexpired">0</div></div>
+<div class="kpi"><span class="muted">Anomali</span><div class="big" id="rissues">0</div></div>
+</div>
+<h3>Refund</h3><div class="muted">Catat refund yang sudah diproses oleh payment provider.</div><div id="refunds"></div>
+</div></section>
+<section id="content" class="panel"><div class="card"><div class="top"><h2>Konten</h2><div class="spacer"></div><button class="primary" onclick="newPost()">+ Upload</button></div><div id="posts"></div></div></section>
+<section id="creator" class="panel"><div class="card"><div class="top"><h2>Kreator</h2><div class="spacer"></div><button class="primary" onclick="newCreator()">+ Kreator</button></div><div id="creators"></div></div></section>
+<section id="tx" class="panel"><div class="card"><h2>Transaksi</h2><div style="overflow:auto"><table class="table"><thead><tr><th>Order</th><th>Kontak</th><th>Nominal</th><th>Status</th><th></th></tr></thead><tbody id="transactions"></tbody></table></div></div></section></div>
+<div id="modal" class="modal"><div class="box"><button class="close" onclick="closeM()">×</button><div id="mb"></div></div></div>
+<script>
+const $=x=>document.getElementById(x),rp=n=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(n||0),esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));let csrfToken="";
+async function refreshCsrf(){try{csrfToken=(await j("/api/admin/csrf",{skipCsrf:true})).csrf||""}catch{}}
+async function j(u,o){o=o||{};const headers=new Headers(o.headers||{});if(!o.skipCsrf&&o.method&&o.method!=="GET"&&o.method!=="HEAD"&&o.method!=="OPTIONS"&&csrfToken)headers.set("x-csrf-token",csrfToken);const r=await fetch(u,{credentials:"same-origin",...o,headers}),d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Gagal");return d}
+async function login(){try{await j("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("pw").value,code:$("otp").value})});init()}catch(e){$("msg").textContent=e.message}}
+async function init(){try{await j("/api/admin/me");await refreshCsrf();$("login").style.display="none";$("app").style.display="block";refresh()}catch{}}
+async function refresh(){const s=await j("/api/admin/summary");$("c").textContent=s.creators;$("p").textContent=s.posts;$("m").textContent=s.activeMembers;$("r").textContent=rp(s.revenue);loadAnalytics();loadFinance();loadRecon();loadPosts();loadCreators();loadTx()}
+
+
+
+async function loadRecon(){
+ try{
+  const d=await j("/api/admin/reconciliation");
+  $("rmactive").textContent=d.memberships.active;
+  $("rmexpired").textContent=d.memberships.expired;
+  $("rissues").textContent=d.issues.length;
+  $("refunds").innerHTML=d.refunds.map(x=>`<div class="rank"><span><b>${esc(x.order_id)}</b><div class="muted">${esc(x.contact)} · ${rp(x.refunded_idr)} / ${rp(x.amount_idr)}</div></span><span class="pill">${esc(x.refund_status)}</span></div>`).join("")||'<span class="muted">Belum ada refund.</span>';
+ }catch(e){console.error(e)}
+}
+async function runRecon(){
+ try{const d=await j("/api/admin/reconcile/run",{method:"POST"});alert(`Selesai. ${d.checked} transaksi diperiksa, ${d.issues} diperbaiki.`);loadRecon();loadFinance();loadAnalytics()}catch(e){alert(e.message)}
+}
+async function loadFinance(){
+ try{
+  const d=await j("/api/admin/finance");
+  $("fgross").textContent=rp(d.summary.gross);
+  $("fcreator").textContent=rp(d.summary.creatorEarnings);
+  $("fplatform").textContent=rp(d.summary.platformRevenue);
+  $("fpayout").textContent=rp(d.summary.payoutTotal);
+  $("fbalance").textContent=rp(d.summary.creatorBalance);
+  $("financeCreators").innerHTML=d.creators.map(x=>`<div class="rank"><div><b>${esc(x.name)}</b> <span class="pill">${x.commission_percent}%</span><div class="muted">Gross ${rp(x.gross)} · Earned ${rp(x.earned)} · Dibayar ${rp(x.paid_out)} · Saldo ${rp(x.balance)}</div></div><div class="actions"><button onclick="changeCommission('${x.id}',${x.commission_percent})">Komisi</button>${x.balance>0?`<button class="primary" onclick="payout('${x.id}',${x.balance})">Bayar ${rp(x.balance)}</button>`:""}</div></div>`).join("")||'<span class="muted">Belum ada kreator.</span>';
+  $("payouts").innerHTML=d.payouts.map(x=>`<div class="rank"><span>${esc(x.creator_name)} · ${rp(x.amount_idr)}<div class="muted">${esc(x.reference||"")} ${esc(x.note||"")}</div></span><span class="pill">${esc(x.status)}</span></div>`).join("")||'<span class="muted">Belum ada payout.</span>';
+ }catch(e){console.error(e)}
+}
+async function changeCommission(id,current){
+ const v=prompt("Komisi kreator (%)",current);
+ if(v===null)return;
+ try{await j("/api/admin/creators/"+id+"/commission",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({commissionPercent:Number(v)})});loadFinance()}catch(e){alert(e.message)}
+}
+async function payout(id,balance){
+ const v=prompt("Nominal payout (IDR)",balance);
+ if(v===null)return;
+ const ref=prompt("Referensi payout (opsional)","PAYOUT-"+Date.now())||"";
+ try{await j("/api/admin/payouts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({creatorId:id,amountIdr:Number(v),reference:ref})});loadFinance();loadAnalytics()}catch(e){alert(e.message)}
+}
+async function loadAnalytics(){
+ try{
+  const d=await j("/api/admin/analytics?days="+$("range").value);
+  $("ar").textContent=rp(d.summary.revenueAll);
+  $("ao").textContent=d.summary.paidAll;
+  $("ap").textContent=d.summary.pendingAll;
+  const vals=d.daily.map(x=>Number(x.revenue)||0),mx=Math.max(1,...vals);
+  $("chart").innerHTML=d.daily.length?d.daily.map(x=>`<div class="barcol" title="${esc(x.day)}: ${rp(x.revenue)}"><i style="height:${Math.max(2,(Number(x.revenue)/mx)*100)}%"></i><span>${esc(String(x.day).slice(5))}</span></div>`).join(""):'<span class="muted">Belum ada data.</span>';
+  $("types").innerHTML=d.byType.map(x=>`<div class="rank"><span>${esc(x.type)}</span><b>${rp(x.revenue)}</b></div>`).join("")||'<span class="muted">Belum ada.</span>';
+  $("members").innerHTML=`<div class="big">${d.members.active}</div><div class="muted">member aktif dari ${d.members.total} membership tercatat</div>`;
+  $("topPosts").innerHTML=d.topPosts.map((x,i)=>`<div class="rank"><span>${i+1}. ${esc(x.title||"Tanpa judul")}<small class="muted"> @${esc(x.handle)}</small></span><b>${rp(x.revenue)}</b></div>`).join("")||'<span class="muted">Belum ada penjualan premium.</span>';
+  $("creatorRank").innerHTML=d.creators.slice(0,10).map((x,i)=>`<div class="rank"><span>${i+1}. ${esc(x.name)}<small class="muted"> · ${x.active_posts} konten</small></span><b>${rp(x.revenue)}</b></div>`).join("")||'<span class="muted">Belum ada data.</span>';
+ }catch(e){console.error(e)}
+}
+async function exportTx(){
+ const r=await fetch("/api/admin/export/transactions",{credentials:"same-origin",headers:csrfToken?{"x-csrf-token":csrfToken}:{}});
+ if(!r.ok)return alert("Export gagal");
+ const blob=await r.blob(),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="lume-transactions.csv";a.click();URL.revokeObjectURL(a.href);
+}
+async function loadCreators(){const a=await j("/api/admin/creators");$("creators").innerHTML=a.map(x=>`<div class="post"><div class="thumb">${esc(x.name).charAt(0)}</div><div><b>${esc(x.name)}</b><div class="muted">@${esc(x.handle)} · ${x.posts} konten</div><div class="muted">${esc(x.bio||"")}</div></div><span class="pill">AKTIF</span></div>`).join("")}
+async function loadPosts(){const a=await j("/api/admin/posts");$("posts").innerHTML=a.map(x=>`<div class="post"><div class="thumb" id="t${x.id}"></div><div><b>${esc(x.title||"Tanpa judul")}</b><div class="muted">@${esc(x.handle)} · ${x.media_type}</div><span class="pill">${x.access_type.toUpperCase()}</span>${x.access_type==="premium"?` <span class="pill">${rp(x.price_idr)}</span>`:""}</div><div class="actions"><button onclick='edit(${JSON.stringify(x).replace(/</g,"\\u003c")})'>Edit</button><button onclick="archive('${x.id}')">Arsip</button></div></div>`).join("")||'<p class="muted">Belum ada konten.</p>';a.forEach(preview)}
+async function preview(x){try{const d=await j("/api/admin/media/preview?key="+encodeURIComponent(x.media_key));$("t"+x.id).innerHTML=x.media_type==="video"?`<video src="${d.url}" muted></video>`:`<img src="${d.url}">`}catch{}}
+
+async function refund(orderId,max){
+ const v=prompt(`Nominal refund, maksimal ${max}`,max);
+ if(v===null)return;
+ const note=prompt("Catatan refund","Refund pelanggan")||"";
+ try{
+  await j("/api/admin/refunds",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId,amountIdr:Number(v),note})});
+  alert("Refund dicatat. Jika refund provider sudah benar-benar diproses, status keuangan Lume akan diperbarui.");
+  loadTx();loadRecon();loadFinance();loadAnalytics();
+ }catch(e){alert(e.message)}
+}
+async function loadTx(){const a=await j("/api/admin/transactions");$("transactions").innerHTML=a.map(x=>`<tr><td>${esc(x.order_id)}</td><td>${esc(x.contact)}</td><td>${rp(x.amount_idr)}</td><td>${esc(x.status)}</td><td>${x.status==="paid"?`<button onclick="refund('${esc(x.order_id)}',${Number(x.amount_idr)})">Refund</button>`:""}</td></tr>`).join("")}
+function newCreator(){$("mb").innerHTML=`<h2>Tambah Kreator</h2><input id="cn" class="full" placeholder="Nama"><br><br><input id="ch" class="full" placeholder="handle"><br><br><input id="cb" class="full" placeholder="Bio"><button class="primary full" style="margin-top:12px" onclick="saveCreator()">Simpan</button>`;$("modal").classList.add("show")}
+async function saveCreator(){try{await j("/api/admin/creators",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:$("cn").value,handle:$("ch").value,bio:$("cb").value})});closeM();refresh()}catch(e){alert(e.message)}}
+async function newPost(){const c=await j("/api/admin/creators");$("mb").innerHTML=`<h2>Upload Konten</h2><div class="field"><label>Kreator</label><select id="pc" class="full">${c.map(x=>`<option value="${x.id}">${esc(x.name)} (@${esc(x.handle)})</option>`).join("")}</select></div><div class="field"><label>Judul</label><input id="pt" class="full"></div><div class="field"><label>File</label><input id="pf" class="full" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"></div><div class="row"><select id="pa"><option value="free">Gratis</option><option value="member">Member</option><option value="premium">Premium</option></select><input id="pp" type="number" value="0" placeholder="Harga"></div><button class="primary full" style="margin-top:12px" onclick="publish()">Upload & Publish</button><div class="bar" style="margin-top:12px"><i id="prog"></i></div><p id="ps" class="muted"></p>`;$("modal").classList.add("show")}
+async function publish(){const f=$("pf").files[0];if(!f)return $("ps").textContent="Pilih file";try{const d=await j("/api/admin/media/upload-url",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({creatorId:$("pc").value,filename:f.name,contentType:f.type,size:f.size})});await new Promise((ok,no)=>{const x=new XMLHttpRequest();x.open("PUT",d.uploadUrl);x.setRequestHeader("Content-Type",f.type);x.upload.onprogress=e=>e.lengthComputable&&($("prog").style.width=e.loaded/e.total*100+"%");x.onload=()=>x.status>=200&&x.status<300?ok():no(Error("Upload gagal"));x.onerror=()=>no(Error("Upload gagal"));x.send(f)});await j("/api/admin/posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({creatorId:$("pc").value,title:$("pt").value,mediaKey:d.mediaKey,mediaType:f.type.startsWith("video/")?"video":"image",accessType:$("pa").value,priceIdr:Number($("pp").value||0)})});closeM();refresh()}catch(e){$("ps").textContent=e.message}}
+function edit(x){$("mb").innerHTML=`<h2>Edit Konten</h2><input id="et" class="full" value="${esc(x.title||"")}"><br><br><select id="ea" class="full"><option value="free">Gratis</option><option value="member">Member</option><option value="premium">Premium</option></select><br><br><input id="ep" class="full" type="number" value="${x.price_idr||0}"><button class="primary full" style="margin-top:12px" onclick="save('${x.id}')">Simpan</button>`;$("ea").value=x.access_type;$("modal").classList.add("show")}
+async function save(id){try{await j("/api/admin/posts/"+id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:$("et").value,accessType:$("ea").value,priceIdr:Number($("ep").value||0)})});closeM();refresh()}catch(e){alert(e.message)}}
+async function archive(id){if(confirm("Arsipkan konten?")){await j("/api/admin/posts/"+id,{method:"DELETE"});refresh()}}function closeM(){$("modal").classList.remove("show")}
+$("logout").onclick=async()=>{await j("/api/admin/logout",{method:"POST"});location.reload()};document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.t).classList.add("active")});init();
+</script></body></html>
