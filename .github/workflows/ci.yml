@@ -1,0 +1,36 @@
+name: Lume CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: lume
+          POSTGRES_USER: lume
+          POSTGRES_DB: lume
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U lume -d lume"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --check server.js
+      - run: node --check scripts/migrate.js
+      - run: node scripts/migrate.js
+        env:
+          DATABASE_URL: postgresql://lume:lume@localhost:5432/lume
